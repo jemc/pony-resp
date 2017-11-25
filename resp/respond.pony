@@ -8,6 +8,23 @@ class val Respond
   
   new val create(out': _Out) => _out = out'
   
+  fun apply(data: Data) =>
+    """
+    Send the given Data using the RESP protocol.
+    """
+    match data
+    | let _: None        => null()
+    | let _: OK          => ok()
+    | let e: Error       => err(e.message)
+    | let s: String      => string(s)
+    | let i: I64         => i64(i)
+    | let e: ElementsAny =>
+      array_start(e.size())
+      for v in e.values() do
+        apply(v)
+      end
+    end
+  
   fun err(message: String) =>
     """
     Send a RESP Error with the given message.
