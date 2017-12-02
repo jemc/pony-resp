@@ -11,7 +11,7 @@ class ref Parser is Iterator[Data]
   
   new create(proto_err_fn': {(String)} ref) => _proto_err_fn = proto_err_fn'
   
-  fun ref append(string: String) =>
+  fun ref append(string: ByteSeq) =>
     // TODO: as an optimization, if _buf is empty, we could in some cases
     // parse the incoming string directly without pushing onto the buffer.
     _buf.append(string)
