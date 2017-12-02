@@ -130,3 +130,19 @@ class TestParser is UnitTest
           .> push(recover Elements.>push("BLUE") end)
       end,
       "*3\r\n*1\r\n$3\r\nRED\r\n*1\r\n$5\r\nGREEN\r\n*1\r\n$4\r\nBLUE\r\n")
+    
+    let parse = Parser({(_) => None })
+    
+    parse.append("$3\r\nRED\r\n$5\r\nGREEN\r\n$4\r\nBLUE\r\n")
+    
+    var array = Array[Data].>concat(parse)
+    h.assert_eq[String](try array(0)?.string() else "???" end, "RED")
+    h.assert_eq[String](try array(1)?.string() else "???" end, "GREEN")
+    h.assert_eq[String](try array(2)?.string() else "???" end, "BLUE")
+    
+    parse.append("*1\r\n$3\r\nRED\r\n*1\r\n$5\r\nGREEN\r\n*1\r\n$4\r\nBLUE\r\n")
+    
+    array = Array[Data].>concat(parse)
+    h.assert_eq[String](try array(0)?.string() else "???" end, "[RED]")
+    h.assert_eq[String](try array(1)?.string() else "???" end, "[GREEN]")
+    h.assert_eq[String](try array(2)?.string() else "???" end, "[BLUE]")

@@ -6,8 +6,8 @@ class ref Parser is Iterator[Data]
   embed _tokens: Array[_Token] = _tokens.create()
   
   let _proto_err_fn: {(String)} ref
-  var _expect_tokens: USize = 1
-  var _expect_string: USize = -1
+  var _need_extra_tokens: USize = 0
+  var _expect_string:     USize = -1
   
   new create(proto_err_fn': {(String)} ref) => _proto_err_fn = proto_err_fn'
   
@@ -17,7 +17,7 @@ class ref Parser is Iterator[Data]
     _buf.append(string)
     _buf_to_tokens()
   
-  fun ref has_next(): Bool => _tokens.size() >= _expect_tokens
+  fun ref has_next(): Bool => _tokens.size() > _need_extra_tokens
   fun ref next(): Data? =>
     // Only proceed if we're sure we have enough tokens to get a full result.
     if not has_next() then error end
@@ -25,31 +25,41 @@ class ref Parser is Iterator[Data]
     // Grab the first token from our list, being done if it's a simple token,
     // or proceeding to the _next_elements if it is a RESP array size marker.
     let iter = _tokens.values()
-    let data =
+    (let data, let consumed_tokens) =
       match iter.next()?
       | let size: USize => _next_elements(iter, size)?
-      | let data: Data  => data
+      | let data: Data  => (data, 1)
       end
-    _tokens.remove(0, _expect_tokens)
+    _tokens.remove(0, consumed_tokens)
+    _need_extra_tokens = _need_extra_tokens - (consumed_tokens - 1)
     data
   
   fun _proto_err(message: String) ? =>
     _proto_err_fn("BADPROTOCOL " + message)
     error
   
-  fun tag _next_elements(iter: Iterator[_Token], size': USize): ElementsAny? =>
+  fun tag _next_elements(
+    iter: Iterator[_Token],
+    size': USize)
+  : (ElementsAny, USize)? =>
     // Accumulate the next sequence of tokens into an elements list.
     let elements = Elements
+    var consumed_tokens: USize = 1
     for _ in Range(0, size') do
       // Grab the next token from our list, being done if it's a simple token,
       // or proceeding to the _next_elements if it is a RESP array size marker.
       // The simple token or elements list gets added to our own elements list.
       match iter.next()?
-      | let size: USize => elements.push(_next_elements(iter, size)?)
-      | let data: Data  => elements.push(data)
+      | let size: USize =>
+        let tuple = _next_elements(iter, size)?
+        consumed_tokens = consumed_tokens + tuple._2
+        elements.push(tuple._1)
+      | let data: Data =>
+        consumed_tokens = consumed_tokens + 1
+        elements.push(data)
       end
     end
-    consume elements
+    (consume elements, consumed_tokens)
   
   fun ref _buf_to_tokens() =>
     try while _buf.size() > 0 do
@@ -79,7 +89,7 @@ class ref Parser is Iterator[Data]
           else
             let count = _buf_as_usize(1)?
             _tokens.push(count)
-            _expect_tokens = _expect_tokens + count
+            _need_extra_tokens = _need_extra_tokens + count
           end
         else
           _proto_err("unknown start byte: " + String.>push(byte))?
