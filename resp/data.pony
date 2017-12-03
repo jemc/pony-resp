@@ -12,12 +12,14 @@ class val Error
 trait val ElementsAny
   fun string(): String
   fun size(): USize
+  fun apply(i: USize): Data?
   fun values(): Iterator[Data]
 
 class val Elements[A: Data = Data] is ElementsAny
   embed array: Array[A] = array.create()
   fun ref push(elem: A) => array.push(elem)
   fun size(): USize => array.size()
+  fun apply(i: USize): A? => array(i)?
   fun values(): Iterator[A] => array.values()
   fun string(): String =>
     let buf = recover String end
