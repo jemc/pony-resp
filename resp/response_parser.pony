@@ -1,7 +1,7 @@
 use "buffered"
 use "collections"
 
-class ref Parser is Iterator[Data]
+class ref ResponseParser is Iterator[Data]
   embed _buf:    Reader        = _buf.create()
   embed _tokens: Array[_Token] = _tokens.create()
   

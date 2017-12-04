@@ -1,8 +1,8 @@
 use "ponytest"
 use ".."
 
-class TestParser is UnitTest
-  fun name(): String => "resp.Parser"
+class TestResponseParser is UnitTest
+  fun name(): String => "resp.ResponseParser"
   
   fun _test[A: Data](
     h: TestHelper,
@@ -15,7 +15,7 @@ class TestParser is UnitTest
       input.push(recover String.>push(byte) end)
     end
     
-    let parser = Parser({(err) => h.fail(err) })
+    let parser = ResponseParser({(err) => h.fail(err) })
     
     for string in input.values() do
       h.assert_false(parser.has_next(),
@@ -131,7 +131,7 @@ class TestParser is UnitTest
       end,
       "*3\r\n*1\r\n$3\r\nRED\r\n*1\r\n$5\r\nGREEN\r\n*1\r\n$4\r\nBLUE\r\n")
     
-    let parse = Parser({(_) => None })
+    let parse = ResponseParser({(_) => None })
     
     parse.append("$3\r\nRED\r\n$5\r\nGREEN\r\n$4\r\nBLUE\r\n")
     
