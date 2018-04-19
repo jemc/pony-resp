@@ -1,5 +1,5 @@
-type Data   is (None | OK | Error | String | I64 | ElementsAny)
-type _Token is (None | OK | Error | String | I64 | USize)
+type Data      is (None | OK | Error | String | I64 | ElementsAny)
+type DataToken is (None | OK | Error | String | I64 | USize)
 
 primitive OK
   fun string(): String => "OK"

@@ -146,3 +146,35 @@ class TestResponseParser is UnitTest
     h.assert_eq[String](try array(0)?.string() else "???" end, "[RED]")
     h.assert_eq[String](try array(1)?.string() else "???" end, "[GREEN]")
     h.assert_eq[String](try array(2)?.string() else "???" end, "[BLUE]")
+    
+    parse.append("*1\r\n$3\r\nRED\r\n*1\r\n$5\r\nGREEN\r\n*1\r\n$4\r\nBLUE\r\n")
+    
+    try
+      let tokens = parse.next_tokens()?
+      h.assert_eq[USize] (try tokens.next()? as USize  else 0     end, 1)
+      h.assert_eq[String](try tokens.next()? as String else "???" end, "RED")
+      h.assert_false(tokens.has_next())
+      h.assert_true(parse.has_next())
+    else
+      h.assert_true(false, "failed to parse.next_tokens()")
+    end
+    
+    try
+      let tokens = parse.next_tokens()?
+      h.assert_eq[USize] (try tokens.next()? as USize  else 0     end, 1)
+      h.assert_eq[String](try tokens.next()? as String else "???" end, "GREEN")
+      h.assert_false(tokens.has_next())
+      h.assert_true(parse.has_next())
+    else
+      h.assert_true(false, "failed to parse.next_tokens()")
+    end
+    
+    try
+      let tokens = parse.next_tokens()?
+      h.assert_eq[USize] (try tokens.next()? as USize  else 0     end, 1)
+      h.assert_eq[String](try tokens.next()? as String else "???" end, "BLUE")
+      h.assert_false(tokens.has_next())
+      h.assert_false(parse.has_next())
+    else
+      h.assert_true(false, "failed to parse.next_tokens()")
+    end

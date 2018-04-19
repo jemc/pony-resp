@@ -1,9 +1,10 @@
 use "buffered"
 use "collections"
+use "debug"
 
 class ref ResponseParser is Iterator[Data]
-  embed _buf:    Reader        = _buf.create()
-  embed _tokens: Array[_Token] = _tokens.create()
+  embed _buf:    Reader           = _buf.create()
+  embed _tokens: Array[DataToken] = _tokens.create()
   
   let _proto_err_fn: {(String)} ref
   var _need_extra_tokens: USize = 0
@@ -19,7 +20,11 @@ class ref ResponseParser is Iterator[Data]
     _buf_to_tokens()
   
   fun ref has_next(): Bool => _tokens.size() > _need_extra_tokens
+  
   fun ref next(): Data? =>
+    """
+    Return the next Data in the stream.
+    """
     // Only proceed if we're sure we have enough tokens to get a full result.
     if not has_next() then error end
     
@@ -31,12 +36,39 @@ class ref ResponseParser is Iterator[Data]
       | let size: USize => _next_elements(iter, size)?
       | let data: Data  => (data, 1)
       end
-    _tokens.remove(0, consumed_tokens)
-    _need_extra_tokens = _need_extra_tokens - (consumed_tokens - 1)
+    _discard_tokens(consumed_tokens)
     data
   
+  fun ref next_tokens(): Iterator[DataToken]? =>
+    """
+    Return an Iterator of DataTokens comprising the next Data in the stream.
+    """
+    // Only proceed if we're sure we have enough tokens to get a full result.
+    if not has_next() then error end
+    
+    let count = _next_tokens_count(_tokens.values())?
+    let out   = _tokens.slice(0, count)
+    _discard_tokens(count)
+    
+    out.values()
+  
+  fun ref _discard_tokens(n: USize) =>
+    _tokens.remove(0, n)
+    _need_extra_tokens = _need_extra_tokens - (n - 1)
+  
+  fun tag _next_tokens_count(iter: Iterator[DataToken]): USize? =>
+    match iter.next()? | let size: USize =>
+      var count: USize = 1
+      for _ in Range(0, size) do
+        count = count + _next_tokens_count(iter)?
+      end
+      count
+    else
+      1
+    end
+  
   fun tag _next_elements(
-    iter: Iterator[_Token],
+    iter: Iterator[DataToken],
     size': USize)
   : (ElementsAny, USize)? =>
     // Accumulate the next sequence of tokens into an elements list.
