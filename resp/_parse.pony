@@ -1,7 +1,7 @@
 use "buffered"
 
 primitive _Parse
-  fun bulk_string(buf: Reader, err_fn: {(String)} ref, size: USize): String? =>
+  fun bulk_string(buf: Reader, err_fn: {ref(String)} ref, size: USize): String? =>
     // Don't proceed unless we have enough bytes for the string and terminator.
     if buf.size() < (size + 2) then error end
     
@@ -13,17 +13,17 @@ primitive _Parse
     
     String.from_array(consume bytes)
   
-  fun usize(buf: Reader, err_fn: {(String)} ref, offset': USize): USize? =>
+  fun usize(buf: Reader, err_fn: {ref(String)} ref, offset': USize): USize? =>
     u64(buf, err_fn, offset')?.usize()
   
-  fun i64(buf: Reader, err_fn: {(String)} ref, offset': USize): I64? =>
+  fun i64(buf: Reader, err_fn: {ref(String)} ref, offset': USize): I64? =>
     // Handle an optional negative marker, then proceed to parse the digits.
     if buf.peek_u8(offset')? == '-'
     then u64(buf, err_fn, offset' + 1)?.i64() * -1
     else u64(buf, err_fn, offset')?.i64()
     end
   
-  fun u64(buf: Reader, err_fn: {(String)} ref, offset': USize): U64? =>
+  fun u64(buf: Reader, err_fn: {ref(String)} ref, offset': USize): U64? =>
     var offset = offset'
     var result = U64(0)
     var byte   = buf.peek_u8(offset = offset + 1)?
@@ -53,6 +53,6 @@ primitive _Parse
     
     result
   
-  fun proto_err(err_fn: {(String)} ref, message: String) ? =>
+  fun proto_err(err_fn: {ref(String)} ref, message: String) ? =>
     err_fn("BADPROTOCOL " + message)
     error

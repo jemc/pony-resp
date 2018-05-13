@@ -11,11 +11,11 @@ class ref CommandParser is Iterator[Array[String] val]
   embed _commands: Array[Array[String] trn] = []
   var   _command:  Array[String] trn        = []
   
-  let _proto_err_fn: {(String)} ref
+  let _proto_err_fn: {ref(String)} ref
   var _expect_string: USize = -1
   var _expect_array:  USize = -1
   
-  new create(proto_err_fn': {(String)} ref) => _proto_err_fn = proto_err_fn'
+  new create(proto_err_fn': {ref(String)} ref) => _proto_err_fn = proto_err_fn'
   fun ref _proto_err(m: String) ? => _Parse.proto_err(_proto_err_fn, m)?
   
   fun ref append(data: ByteSeq) =>

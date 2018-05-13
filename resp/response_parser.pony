@@ -6,11 +6,11 @@ class ref ResponseParser is Iterator[Data]
   embed _buf:    Reader           = _buf.create()
   embed _tokens: Array[DataToken] = _tokens.create()
   
-  let _proto_err_fn: {(String)} ref
+  let _proto_err_fn: {ref(String)} ref
   var _need_extra_tokens: USize = 0
   var _expect_string:     USize = -1
   
-  new create(proto_err_fn': {(String)} ref) => _proto_err_fn = proto_err_fn'
+  new create(proto_err_fn': {ref(String)} ref) => _proto_err_fn = proto_err_fn'
   fun ref _proto_err(m: String) ? => _Parse.proto_err(_proto_err_fn, m)?
   
   fun ref append(data: ByteSeq) =>
