@@ -170,7 +170,7 @@ class TestResponseParser is UnitTest
     end
     
     try
-      let tokens = parse.next_tokens()?
+      let tokens: Iterator[DataToken] = parse.next_tokens_iso()?
       h.assert_eq[USize] (try tokens.next()? as USize  else 0     end, 1)
       h.assert_eq[String](try tokens.next()? as String else "???" end, "BLUE")
       h.assert_false(tokens.has_next())

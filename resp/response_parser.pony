@@ -52,6 +52,33 @@ class ref ResponseParser is Iterator[Data]
     
     out.values()
   
+  fun ref next_tokens_iso(): Iterator[DataToken] iso^? =>
+    """
+    Return an Iterator of DataTokens comprising the next Data in the stream.
+    This version of the function is not as efficient, but returns an iso.
+    
+    This is needed only due to an artificial limitation in the Pony
+    standard library - it should be possible to efficiently get an iso
+    slice of an Array when the element type is a val or tag.
+    
+    TODO: Resolve this limitation and remove this function.
+    """
+    // Only proceed if we're sure we have enough tokens to get a full result.
+    if not has_next() then error end
+    
+    let count = _next_tokens_count(_tokens.values())?
+    let out   = recover Array[DataToken](count) end
+    
+    var idx: USize = 0
+    try while idx < count do
+      out.push(_tokens(idx)?)
+      idx = idx + 1
+    end end
+    
+    _discard_tokens(count)
+    
+    recover (consume out).values() end
+  
   fun ref _discard_tokens(n: USize) =>
     _tokens.remove(0, n)
     _need_extra_tokens = _need_extra_tokens - (n - 1)
